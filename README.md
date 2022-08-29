@@ -6,15 +6,15 @@ This repository contains the implementation for the paper ["Network Regression w
 Network data are increasingly available in various research fields, motivating statistical analysis for populations of networks where a network as a whole is viewed as a data point. The study of how a network changes as a function of covariates is often of paramount interest. However, due to the non-Euclidean nature of networks, basic statistical tools available for scalar and vector data are no longer applicable. This motivates to extend the notion of regression to the case of responses that are network data. Here we propose to adopt conditional \f means implemented with both global least squares regression and local weighted least squares smoothing, extending the \f regression concept to networks that are quantified by their graph Laplacians. The challenge is to characterize the space of graph Laplacians so as to justify the application of \f regression. This characterization then leads to asymptotic rates of convergence for the corresponding M-estimators by applying empirical process methods. We demonstrate the usefulness and good practical performance of the proposed framework with simulations and with network data arising from resting-state fMRI in neuroimaging, as well as New York taxi records.
 
 <p float="left">
-<img src="img/taxi0502.pdf" alt="drawing" width="400"> 
-<img src="img/taxi0625.pdf" alt="drawing" width="400">
-<img src="img/taxi0804.pdf" alt="drawing" width="400">
-<img src="img/taxi0907.pdf" alt="drawing" width="400">
+<img src="img/taxi0502.png" alt="drawing" width="400"> 
+<img src="img/taxi0625.png" alt="drawing" width="400">
+<img src="img/taxi0804.png" alt="drawing" width="400">
+<img src="img/taxi0907.png" alt="drawing" width="400">
 </p>
 
 **Figure 1**: True (left) and ﬁtted (right) networks on May 2, Jun 25, Aug 4, and Sep 7, 2020 (from top left to bottom right). The corresponding days and the number of COVID-19 new cases are in the headline of each subﬁgure.
 
-<img align="center" src="img/adni.pdf" alt="drawing" width="700">
+<img align="center" src="img/adni.png" alt="drawing" width="800">
 
 **Figure 2**: Topological representation using spectral community detection for predicted functional connectivity networks at diﬀerent ages (years). The communities with no less than 10 ROIs are highlighted using colored polygons. These communities are found to be associated with diﬀerent anatomical regions of the brain.
 
