@@ -7,6 +7,7 @@ source("src/kerFctn.R")
 source("severn/functions_needed.R")
 Q <- 1000
 nVec <- c(50, 100, 200, 500, 1000)
+N <- 9
 m <- c(5, 5)
 theta <- c(0.5, 0.2, 0.5)
 d <- c(m[1]*(m[1] - 1)/2, m[1]*m[2], m[2]*(m[2] - 1)/2)
@@ -86,7 +87,7 @@ ise2 <- foreach(n = nVec, .combine = 'cbind') %:%
     L <- list()
     LMean <- list()
     for(i in 1:n){
-      LVec <- -rbeta(sum(d), shape1 = 0.1*X[i], shape2 = 1 - 0.1*X[i])
+      LVec <- -rbeta(sum(d), shape1 = X[i], shape2 = 1 - X[i])
       temp <- matrix(0, nrow = sum(m), ncol = sum(m))
       temp[lower.tri(temp)] <- LVec
       temp <- temp + t(temp)
@@ -96,7 +97,7 @@ ise2 <- foreach(n = nVec, .combine = 'cbind') %:%
       U <- eigenDecom$vectors
       L[[i]] <- U%*%diag(Lambda^(1/alpha))%*%t(U)
       
-      LMeanVec <- -rep(0.1*X[i], sum(d))
+      LMeanVec <- -rep(X[i], sum(d))
       temp <- matrix(0, nrow = sum(m), ncol = sum(m))
       temp[lower.tri(temp)] <- LMeanVec
       temp <- temp + t(temp)
@@ -214,88 +215,9 @@ fit4 <- lm(log(mise4)~log(nVec))
 summary(fit4)
 plot(log(mise4), log(nVec))
 
-##########################################################################
-# Part II: Comparison between different types of regression and metrics. #
-##########################################################################
-# Comparison under simulation scenario I
-set.seed(1)
-bw3 <- c(0.013, 0.013, 0.010, 0.008, 0.007)
-bw4 <- c(0.17, 0.15, 0.13, 0.11, 0.10)
-ise <- foreach(n = nVec) %:%
-  foreach(icount(Q), .combine = 'rbind') %dopar% {
-    X <- runif(n, min = 0, max = 1)
-    L <- list()
-    LMean <- list()
-    for(i in 1:n){
-      LVec <- -rbeta(sum(d), shape1 = X[i], shape2 = 1-X[i])
-      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
-      temp[lower.tri(temp)] <- LVec
-      temp <- temp + t(temp)
-      diag(temp) <- -colSums(temp)
-      L[[i]] <- temp
-      
-      LMeanVec <- -rep(X[i], sum(d))
-      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
-      temp[lower.tri(temp)] <- LMeanVec
-      temp <- temp + t(temp)
-      diag(temp) <- -colSums(temp)
-      LMean[[i]] <- temp
-    }
-    sim1 <- gnr(L, X)
-    sim2 <- gnr(L, X, optns = list(metric = "power", alpha = alpha))
-    sim3 <- lnr(L, X, optns = list(bw = bw3[which(nVec == n)]))
-    sim4 <- lnr(L, X, optns = list(metric = 'power', alpha = alpha, bw = bw4[which(nVec == n)]))
-    rowMeans(sapply(1:n, function(i) c(sum((LMean[[i]]-sim1$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim2$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim3$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim4$fit[[i]])^2))))
-  }
-ise1 <- sapply(1:length(nVec), function(n) ise[[n]][, 1])
-ise2 <- sapply(1:length(nVec), function(n) ise[[n]][, 2])
-ise3 <- sapply(1:length(nVec), function(n) ise[[n]][, 3])
-ise4 <- sapply(1:length(nVec), function(n) ise[[n]][, 4])
-
-# Comparison under simulation scenario III
-set.seed(1)
-bw3 <- c(0.088, 0.075, 0.065, 0.054, 0.047)
-bw4 <- c(0.070, 0.060, 0.052, 0.043, 0.038)
-ise <- foreach(n = nVec) %:%
-  foreach(icount(Q), .combine = 'rbind') %dopar% {
-    X <- runif(n, min = 0, max = 1)
-    L <- list()
-    LMean <- list()
-    for(i in 1:n){
-      LVec <- -rbeta(sum(d), shape1 = sin(pi * X[i]), shape2 = 1 - sin(pi * X[i]))
-      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
-      temp[lower.tri(temp)] <- LVec
-      temp <- temp + t(temp)
-      diag(temp) <- -colSums(temp)
-      L[[i]] <- temp
-      
-      LMeanVec <- -rep(sin(pi * X[i]), sum(d))
-      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
-      temp[lower.tri(temp)] <- LMeanVec
-      temp <- temp + t(temp)
-      diag(temp) <- -colSums(temp)
-      LMean[[i]] <- temp
-    }
-    sim1 <- gnr(L, X)
-    sim2 <- gnr(L, X, optns = list(metric = "power", alpha = alpha))
-    sim3 <- lnr(L, X, optns = list(bw = bw3[which(nVec == n)]))
-    sim4 <- lnr(L, X, optns = list(metric = 'power', alpha = alpha, bw = bw4[which(nVec == n)]))
-    rowMeans(sapply(1:n, function(i) c(sum((LMean[[i]]-sim1$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim2$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim3$fit[[i]])^2), 
-                                       sum((LMean[[i]]-sim4$fit[[i]])^2))))
-  }
-ise1 <- sapply(1:length(nVec), function(n) ise[[n]][, 1])
-ise2 <- sapply(1:length(nVec), function(n) ise[[n]][, 2])
-ise3 <- sapply(1:length(nVec), function(n) ise[[n]][, 3])
-ise4 <- sapply(1:length(nVec), function(n) ise[[n]][, 4])
-
-###################################################
-# Part III: Networks with latent block structure. #
-###################################################
+##################################################
+# Part II: Networks with latent block structure. #
+##################################################
 # Simulation scenario I
 set.seed(1)
 isesbm1 <- foreach(n = nVec, .combine = cbind) %:%
@@ -619,3 +541,253 @@ plot(log(misesbm4), log(nVec))
 # 50 100 200 500 1000
 # 1.7505000 1.0556659 0.6183106 0.3146141 0.1883002 Dryden
 # 1.4004693 0.8399016 0.4866702 0.2466061 0.1486243
+
+###########################################################################
+# Part III: Comparison between different types of regression and metrics. #
+###########################################################################
+# Comparison under simulation scenario I
+set.seed(1)
+bw3 <- c(0.013, 0.013, 0.010, 0.008, 0.007)
+bw4 <- c(0.17, 0.15, 0.13, 0.11, 0.10)
+ise <- foreach(n = nVec) %:%
+  foreach(icount(Q), .combine = 'rbind') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbeta(sum(d), shape1 = X[i], shape2 = 1-X[i])
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      L[[i]] <- temp
+      
+      LMeanVec <- -rep(X[i], sum(d))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LMeanVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      LMean[[i]] <- temp
+    }
+    sim1 <- gnr(L, X)
+    sim2 <- gnr(L, X, optns = list(metric = "power", alpha = alpha))
+    sim3 <- lnr(L, X, optns = list(bw = bw3[which(nVec == n)]))
+    sim4 <- lnr(L, X, optns = list(metric = 'power', alpha = alpha, bw = bw4[which(nVec == n)]))
+    rowMeans(sapply(1:n, function(i) c(sum((LMean[[i]]-sim1$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim2$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim3$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim4$fit[[i]])^2))))
+  }
+ise1 <- sapply(1:length(nVec), function(n) ise[[n]][, 1])
+ise2 <- sapply(1:length(nVec), function(n) ise[[n]][, 2])
+ise3 <- sapply(1:length(nVec), function(n) ise[[n]][, 3])
+ise4 <- sapply(1:length(nVec), function(n) ise[[n]][, 4])
+
+# Comparison under simulation scenario III
+set.seed(1)
+bw3 <- c(0.088, 0.075, 0.065, 0.054, 0.047)
+bw4 <- c(0.070, 0.060, 0.052, 0.043, 0.038)
+ise <- foreach(n = nVec) %:%
+  foreach(icount(Q), .combine = 'rbind') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbeta(sum(d), shape1 = sin(pi * X[i]), shape2 = 1 - sin(pi * X[i]))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      L[[i]] <- temp
+      
+      LMeanVec <- -rep(sin(pi * X[i]), sum(d))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LMeanVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      LMean[[i]] <- temp
+    }
+    sim1 <- gnr(L, X)
+    sim2 <- gnr(L, X, optns = list(metric = "power", alpha = alpha))
+    sim3 <- lnr(L, X, optns = list(bw = bw3[which(nVec == n)]))
+    sim4 <- lnr(L, X, optns = list(metric = 'power', alpha = alpha, bw = bw4[which(nVec == n)]))
+    rowMeans(sapply(1:n, function(i) c(sum((LMean[[i]]-sim1$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim2$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim3$fit[[i]])^2), 
+                                       sum((LMean[[i]]-sim4$fit[[i]])^2))))
+  }
+ise1 <- sapply(1:length(nVec), function(n) ise[[n]][, 1])
+ise2 <- sapply(1:length(nVec), function(n) ise[[n]][, 2])
+ise3 <- sapply(1:length(nVec), function(n) ise[[n]][, 3])
+ise4 <- sapply(1:length(nVec), function(n) ise[[n]][, 4])
+
+####################################################################
+# Part IV: Networks generated from Erdos-Renyi random graph model. #
+####################################################################
+# Simulation scenario I
+set.seed(1)
+iseer1 <- foreach(n = nVec, .combine = 'cbind') %:%
+  foreach(icount(Q), .combine = 'c') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbinom(sum(d), 1, N / sum(d))*rbeta(sum(d), shape1 = X[i], shape2 = 1 - X[i])
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      L[[i]] <- temp
+      
+      LMeanVec <- -rep(X[i] * N / sum(d), sum(d))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LMeanVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      LMean[[i]] <- temp
+    }
+    sim <- gnr(L, X)
+    mean(sapply(1:n, function(i) sum((LMean[[i]]-sim$fit[[i]])^2)))
+  }
+
+# miseer1 <- colMeans(iseer1)
+# fiter1 <- lm(log(miseer1)~log(nVec))
+# summary(fiter1)
+# plot(log(miseer1), log(nVec))#################################
+
+# Simulation scenario II
+set.seed(1)
+iseer2 <- foreach(n = nVec, .combine = 'cbind') %:%
+  foreach(icount(Q), .combine = 'c') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbinom(sum(d), 1, N / sum(d))*rbeta(sum(d), shape1 = X[i], shape2 = 1 - X[i])
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      eigenDecom <- eigen(temp)
+      Lambda <- eigenDecom$values
+      U <- eigenDecom$vectors
+      L[[i]] <- U%*%diag(Lambda^(1/alpha))%*%t(U)
+
+      LMeanVec <- -rep(X[i] * N / sum(d), sum(d))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LMeanVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      eigenDecom <- eigen(temp)
+      Lambda <- pmax(eigenDecom$values, 0)
+      U <- eigenDecom$vectors
+      temp <- U%*%diag(Lambda^(1/alpha))%*%t(U)
+      # model$Update(q = -temp)
+      # temp <- matrix(model$Solve()$x, ncol = sum(m))
+      # temp <- (temp + t(temp)) / 2 # symmetrize
+      # temp[temp > 0] <- 0 # off diagonal should be negative
+      # diag(temp) <- 0
+      # diag(temp) <- -colSums(temp)
+      LMean[[i]] <- temp
+    }
+    sim <- gnr(L, X, optns = list(metric = "power", alpha = alpha))
+    mean(sapply(1:n, function(i) sum((LMean[[i]]-sim$fit[[i]])^2)))
+  }
+
+# miseer2 <- colMeans(iseer2)
+# fiter2 <- lm(log(miseer2)~log(nVec))
+# summary(fiter2)
+# plot(log(miseer2), log(nVec))
+
+# Simulation scenario III
+set.seed(1)
+N <- 9
+bw1 <- c(0.180, 0.157, 0.137, 0.114, 0.1)
+iseer3 <- foreach(n = nVec, .combine = 'cbind') %:%
+  foreach(icount(Q), .combine = 'c') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbinom(sum(d), 1, N / sum(d))*rbeta(sum(d), shape1 = sin(pi * X[i]), shape2 = 1 - sin(pi * X[i]))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      L[[i]] <- temp
+      
+      LMeanVec <- -rep(sin(pi * X[i]) * N / sum(d), sum(d))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LMeanVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      LMean[[i]] <- temp
+    }
+    sim <- lnr(L, X, optns = list(bw = bw1[which(nVec == n)]))
+    mean(sapply(1:n, function(i) sum((LMean[[i]]-sim$fit[[i]])^2)))
+  }
+
+# miseer3 <- colMeans(iseer3)
+# fiter3 <- lm(log(miseer3)~log(nVec))
+# summary(fiter3)
+# plot(log(miseer3), log(nVec))
+
+# Simulation scenario IV
+set.seed(1)
+xSeq <- seq(0, 1, length.out = 1001)
+LMeanRefer4 <- list()
+for(i in 1:1001) {
+  x <- xSeq[i]
+  y <- matrix(0, nrow = sum(m), ncol = sum(m))
+  for(j in 1:10000){
+    LMeanVec <- -rbinom(sum(d), 1, N / sum(d)) * rbeta(sum(d), shape1 = sin(pi * x), shape2 = 1 - sin(pi * x))
+    temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+    temp[lower.tri(temp)] <- LMeanVec
+    temp <- temp + t(temp)
+    diag(temp) <- -colSums(temp)
+    eigenDecom <- eigen(temp)
+    Lambda <- pmax(eigenDecom$values, 0)
+    U <- eigenDecom$vectors
+    temp <- U%*%diag(Lambda^alpha)%*%t(U)
+    y <- y + temp/10000
+  }
+  eigenDecom <- eigen(y)
+  Lambda <- pmax(eigenDecom$values, 0)
+  U <- eigenDecom$vectors
+  y <- U%*%diag(Lambda^(1/alpha))%*%t(U)
+
+  model$Update(q = -y)
+  y <- matrix(model$Solve()$x, ncol = sum(m))
+  y <- (y + t(y)) / 2 # symmetrize
+  y[y > 0] <- 0 # off diagonal should be negative
+  diag(y) <- 0
+  diag(y) <- -colSums(y)
+  LMeanRefer4[[i]] <- y
+}
+
+set.seed(1)
+bw2 <- c(0.095, 0.082, 0.072, 0.060, 0.052)
+iseer4 <- foreach(n = nVec, .combine = 'cbind') %:%
+  foreach(icount(Q), .combine = 'c') %dopar% {
+    X <- runif(n, min = 0, max = 1)
+    L <- list()
+    LMean <- list()
+    for(i in 1:n){
+      LVec <- -rbinom(sum(d), 1, N / sum(d)) * rbeta(sum(d), shape1 = sin(pi * X[i]), shape2 = 1 - sin(pi * X[i]))
+      temp <- matrix(0, nrow = sum(m), ncol = sum(m))
+      temp[lower.tri(temp)] <- LVec
+      temp <- temp + t(temp)
+      diag(temp) <- -colSums(temp)
+      L[[i]] <- temp
+      
+      idx <- which.min(abs(X[i] - xSeq))
+      LMean[[i]] <- LMeanRefer4[[idx]]
+    }
+    sim <- lnr(L, X, optns = list(metric = 'power', alpha = alpha, bw = bw2[which(nVec == n)]))
+    mean(sapply(1:n, function(i) sum((LMean[[i]]-sim$fit[[i]])^2)))
+  }
+
+# miseer4 <- colMeans(iseer4)
+# fiter4 <- lm(log(miseer4)~log(nVec))
+# summary(fiter4)
+# plot(log(miseer4), log(nVec))
