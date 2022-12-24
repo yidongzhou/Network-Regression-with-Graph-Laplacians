@@ -41,7 +41,10 @@ Please cite our paper
 @article{zhou2022network,
   title={Network Regression with Graph Laplacians},
   author={Zhou, Yidong and M{\"u}ller, Hans-Georg},
-  journal={arXiv preprint arXiv:2109.02981},
+  journal={Journal of Machine Learning Research},
+  volume={23},
+  number={320},
+  pages={1--41},
   year={2022}
 }
 ``` 
