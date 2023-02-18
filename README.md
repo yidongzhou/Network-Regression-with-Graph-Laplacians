@@ -19,7 +19,7 @@ Network data are increasingly available in various research fields, motivating s
 **Figure 2**: Topological representation using spectral community detection for predicted functional connectivity networks at diﬀerent ages (years). The communities with no less than 10 ROIs are highlighted using colored polygons. These communities are found to be associated with diﬀerent anatomical regions of the brain.
 
 ## File Overview
-- `src/`: implementation for the paper ["Network Regression with Graph Laplacians"](https://arxiv.org/pdf/2109.02981.pdf) in R.
+- `src/`: implementation for the paper ["Network Regression with Graph Laplacians"](https://www.jmlr.org/papers/volume23/22-0681/22-0681.pdf) in R.
   - `gnr.R` Global regression for network data quantified by graph Laplacians with Euclidean predictors.
   - `lnr.R` Local regression for network data quantified by graph Laplacians with Euclidean predictors.
   - `kerFctn.R` Kernel function called by `lnr.R`.
@@ -35,7 +35,7 @@ Network data are increasingly available in various research fields, motivating s
 ## Citation
 
 Please cite our paper
-["Network Regression with Graph Laplacians"](https://arxiv.org/pdf/2109.02981.pdf)
+["Network Regression with Graph Laplacians"](https://www.jmlr.org/papers/volume23/22-0681/22-0681.pdf)
 
 ``` 
 @article{zhou2022network,
