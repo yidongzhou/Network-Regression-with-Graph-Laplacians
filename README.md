@@ -1,5 +1,5 @@
 # Network-Regression-with-Graph-Laplacians
-This repository contains the implementation for the paper ["Network Regression with Graph Laplacians"](https://arxiv.org/pdf/2109.02981.pdf) in R.
+This repository contains the implementation for the paper ["Network Regression with Graph Laplacians"](https://www.jmlr.org/papers/volume23/22-0681/22-0681.pdf) in R.
 
 ## Summary of the paper
 
