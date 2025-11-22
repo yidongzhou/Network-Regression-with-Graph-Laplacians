@@ -27,8 +27,8 @@ Network data are increasingly available in various research fields, motivating s
   - Severn, K.E., Dryden, I.L. and Preston, S.P., 2022. Manifold valued data analysis of samples of networks, with applications in corpus linguistics. The Annals of Applied Statistics, 16(1), pp.368-390.
   - Severn, K.E., Dryden, I.L. and Preston, S.P., 2021. Non‐parametric regression for networks. Stat, 10(1), p.e373.
 - `data/`: This folder contains part of the data used in the first data application of the paper : New York Yellow Taxi System After COVID-19 Outbreak.
-  - `NYC_cases_by_day.csv`: NYC Coronavirus Disease 2019 (COVID-19) data (publicly available at https://github.com/nychealth/coronavirus-data) where one can find citywide and borough-speciﬁc daily counts of probable and conﬁrmed COVID-19 cases in New York City since February 29, 2020.
-  - `yellowTripdata2020`: The yellow taxi trip records (publicly available at https://www1.nyc.gov/site/tlc/about/tlctrip-record-data.page) on pick-up and drop-oﬀ dates/times, pick-up and drop-oﬀ locations, trip distances, itemized fares, rate types, payment types and driverreported passenger counts, collected by New York City Taxi and Limousine Commission (NYC TLC).
+  - `NYC_cases_by_day.csv`: NYC Coronavirus Disease 2019 (COVID-19) data (publicly available at [https://github.com/nychealth/coronavirus-data](https://github.com/nychealth/coronavirus-data)) where one can find citywide and borough-speciﬁc daily counts of probable and conﬁrmed COVID-19 cases in New York City since February 29, 2020.
+  - `yellowTripdata2020`: The yellow taxi trip records (publicly available at [https://www1.nyc.gov/site/tlc/about/tlctrip-record-data.page](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)) on pick-up and drop-oﬀ dates/times, pick-up and drop-oﬀ locations, trip distances, itemized fares, rate types, payment types and driverreported passenger counts, collected by New York City Taxi and Limousine Commission (NYC TLC).
 - `simulation.R`: all R codes used in simulation.
 - `taxi.R`: R codes for the first data application of the paper: New York Yellow Taxi System After COVID-19 Outbreak.
 
