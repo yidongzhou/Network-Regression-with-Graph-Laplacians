@@ -1,7 +1,7 @@
 #' @title Local Network Regression
 #' @description Local regression for network data quantified by graph Laplacians with Euclidean predictors.
 #' @param gl a list (length n) of m by m matrices (resp. an m by m by n array) where
-#'   \code{M[[i]]} (resp. \code{M[, , i]}) holds the i-th graph Laplacian
+#'   \code{gl[[i]]} (resp. \code{gl[, , i]}) holds the i-th graph Laplacian
 #'   of dimension m by m.
 #' @param x an n by p matrix or data frame of predictors.
 #'   It can be a vector of length n if p = 1.
@@ -56,8 +56,8 @@
 #' res$predict
 #' @references
 #' \itemize{
-#' \item \cite{Zhou, Y. and Müller, H.G., 2022. Network Regression with Graph Laplacians. arXiv preprint arXiv:2109.02981.}
-#' \item \cite{Petersen, A. and Müller, H.-G. (2019). Fréchet regression for random objects with Euclidean predictors. The Annals of Statistics, 47(2), 691--719.}
+#' \item \cite{Zhou, Y. and Müller, H.G., 2022. Network regression with graph Laplacians. Journal of Machine Learning Research, 23(320), pp.1-41.}
+#' \item \cite{Petersen, A. and Müller, H.G., 2019. Fréchet regression for random objects with Euclidean predictors. Annals of Statistics, 47(2), pp.691-719.}
 #' }
 #' @export
 
