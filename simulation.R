@@ -39,10 +39,51 @@ for (i in 1:(sum(m) - 1)) {
   }
 }
 model <- osqp::osqp(P, q, consts, l, u, osqp::osqpSettings(verbose = FALSE))
+
+# Helper function to create OSQP model (needed in parallel workers)
+create_osqp_model <- function(m_size) {
+  W <- 2^32
+  nConsts <- m_size^2
+  l <- c(rep.int(0, m_size * (m_size + 1) / 2), rep.int(-W, m_size * (m_size - 1) / 2))
+  u <- rep.int(0, nConsts)
+  q <- rep.int(0, m_size^2)
+  P <- diag(m_size^2)
+  consts <- matrix(0, nrow = nConsts, ncol = m_size^2)
+  k <- 0
+  for (i in 1:(m_size - 1)) {
+    for (j in (i + 1):m_size) {
+      k <- k + 1
+      consts[k, (j - 1) * m_size + i] <- 1
+      consts[k, (i - 1) * m_size + j] <- -1
+    }
+  }
+  for (i in 1:m_size) {
+    consts[k + i, ((i - 1) * m_size + 1):(i * m_size)] <- rep(1, m_size)
+  }
+  k <- k + m_size
+  for (i in 1:(m_size - 1)) {
+    for (j in (i + 1):m_size) {
+      k <- k + 1
+      consts[k, (j - 1) * m_size + i] <- 1
+    }
+  }
+  osqp::osqp(P, q, consts, l, u, osqp::osqpSettings(verbose = FALSE))
+}
+
 # Parallel computing
 library(doParallel)
 NUM_CORES <- 36
 cl <- makeCluster(NUM_CORES)
+# Export required packages and source files to workers
+clusterEvalQ(cl, {
+  source("src/gnr.R")
+  source("src/lnr.R")
+  source("src/kerFctn.R")
+  source("severn/functions_needed.R")
+})
+# Export the helper function and variables needed in parallel blocks
+# Note: Variables like xSeq, LMeanRef4, etc. will be exported when they're created
+clusterExport(cl, c("create_osqp_model", "m", "alpha", "d", "theta", "N", "Q", "nVec"))
 registerDoParallel(cl)
 
 #################################################################
@@ -106,8 +147,9 @@ ise2 <- foreach(n = nVec, .combine = 'cbind') %:%
       Lambda <- pmax(eigenDecom$values, 0)
       U <- eigenDecom$vectors
       temp <- U%*%diag(Lambda^(1/alpha))%*%t(U)
-      model$Update(q = -temp)
-      temp <- matrix(model$Solve()$x, ncol = sum(m))
+      model_local <- create_osqp_model(sum(m))
+      model_local$Update(q = -temp)
+      temp <- matrix(model_local$Solve()$x, ncol = sum(m))
       temp <- (temp + t(temp)) / 2 # symmetrize
       temp[temp > 0] <- 0 # off diagonal should be negative
       diag(temp) <- 0
@@ -187,6 +229,8 @@ for(i in 1:1001) {
   diag(y) <- -colSums(y)
   LMeanRef4[[i]] <- y
 }
+# Export LMeanRef4 and xSeq to parallel workers
+clusterExport(cl, c("LMeanRef4", "xSeq"))
 
 set.seed(1)
 bw4 <- c(0.051, 0.044, 0.038, 0.032, 0.027)
@@ -480,6 +524,8 @@ for(i in 1:1001) {
   diag(y) <- -colSums(y)
   LMeanRefsbm4[[i]] <- y
 }
+# Export LMeanRefsbm4 and xSeq to parallel workers
+clusterExport(cl, c("LMeanRefsbm4", "xSeq"))
 
 set.seed(1)
 bw4 <- c(0.115, 0.1, 0.087, 0.073, 0.063)# n^-0.2
@@ -487,6 +533,8 @@ bw4sd <- c(0.115, 0.1, 0.087, 0.073, 0.063)
 kh <- function(x, h){
   exp(-x^2/(2*h^2))/(sqrt(2*pi)*h)
 }
+# Export kh function to parallel workers
+clusterExport(cl, "kh")
 isesbm4 <- foreach(n = nVec, .combine = 'cbind') %:%
   foreach(icount(Q), .combine = 'c') %dopar% {
     X <- runif(n, min = 0, max = 1)
@@ -764,6 +812,8 @@ for(i in 1:1001) {
   diag(y) <- -colSums(y)
   LMeanRefer4[[i]] <- y
 }
+# Export LMeanRefer4 and xSeq to parallel workers
+clusterExport(cl, c("LMeanRefer4", "xSeq"))
 
 set.seed(1)
 bw2 <- c(0.095, 0.082, 0.072, 0.060, 0.052)
